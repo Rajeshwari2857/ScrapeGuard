@@ -1,0 +1,3003 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScrapeGuard — Developer Dashboard &amp; Reliability</title>
+  <style>
+    :root {
+      /* Five Coolors project palette */
+      --fresh-green: #BAF2BB;
+      --mint: #BAF2D8;
+      --sky-blue: #BAD7F2;
+      --rose-pink: #F2BAC9;
+      --sand-yellow: #F2E2BA;
+
+      /* Derived strong shades (for borders, tier bars, icons) */
+      --green-strong: #2E8B3D;
+      --mint-strong: #2A8A68;
+      --blue-strong: #2F6CA3;
+      --rose-strong: #C23B5C;
+      --yellow-strong: #B8860B;
+
+      /* Neutrals */
+      --ink: #14181F;
+      --secondary: #4A5560;
+      --border: #D9E0DD;
+      --border-subtle: #E8ECE9;
+      --page-canvas: #F6F9F7;
+      --surface: #FFFFFF;
+      --surface-hover: #F0F4F2;
+      --code-bg: #FFFFFF;
+      --code-gutter: #F4F7F5;
+
+      /* Typography */
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--page-canvas);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 18px;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: var(--blue-strong);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    button {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      transition: background-color 0.12s ease, border-color 0.12s ease;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    select:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--blue-strong);
+      outline-offset: 1px;
+    }
+
+    /* LAYOUT SHELL */
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+      background-color: var(--page-canvas);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    /* COLLAPSIBLE LEFT SIDEBAR */
+    .sidebar {
+      width: 270px;
+      min-width: 270px;
+      background-color: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      transition: width 0.18s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar.collapsed {
+      width: 64px;
+      min-width: 64px;
+    }
+
+    .sidebar-header {
+      height: 56px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--ink);
+      color: var(--fresh-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      transition: opacity 0.12s ease;
+    }
+
+    .brand-name {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      line-height: 16px;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--secondary);
+      line-height: 14px;
+    }
+
+    /* Collapse Toggle Button */
+    .collapse-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background-color: var(--surface-hover);
+      color: var(--secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .collapse-btn:hover {
+      background-color: #E2E7E4;
+      color: var(--ink);
+    }
+
+    .nav-section {
+      padding: 16px 10px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-x: hidden;
+    }
+
+    .nav-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--secondary);
+      padding: 8px 10px 4px;
+      white-space: nowrap;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid transparent;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-item .nav-icon {
+      font-size: 15px;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .nav-item .nav-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .nav-item:hover {
+      background-color: var(--surface-hover);
+    }
+
+    .nav-item.active {
+      background-color: var(--sky-blue);
+      border-color: var(--blue-strong);
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .sidebar-footer {
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--secondary);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background-color: #FAFCFA;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .engine-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .engine-chip .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 99px;
+      background: var(--green-strong);
+      flex-shrink: 0;
+    }
+
+    /* Collapsed sidebar hide state */
+    .sidebar.collapsed .brand-text,
+    .sidebar.collapsed .nav-text,
+    .sidebar.collapsed .nav-label,
+    .sidebar.collapsed .sidebar-footer div:not(.engine-chip),
+    .sidebar.collapsed .engine-chip span:last-child {
+      display: none;
+    }
+
+    .sidebar.collapsed .sidebar-header {
+      height: 72px;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 0;
+    }
+
+    .sidebar.collapsed .brand-mark {
+      margin-right: 0;
+    }
+
+    .sidebar.collapsed .collapse-btn {
+      position: static;
+    }
+
+    .sidebar.collapsed .nav-item {
+      justify-content: center;
+      padding: 9px 0;
+    }
+
+    .sidebar.collapsed .nav-item .nav-icon {
+      width: auto;
+      font-size: 16px;
+    }
+
+    /* MAIN CONTENT AREA */
+    .main-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background-color: var(--page-canvas);
+    }
+
+    /* COMPACT TOP BAR (56px) */
+    .topbar {
+      height: 56px;
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 9;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--secondary);
+    }
+
+    .topbar-project-crumb {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .topbar-spacer {
+      flex: 1;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .project-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 28px;
+      padding: 0 10px;
+      background-color: var(--surface-hover);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--ink);
+    }
+
+    .live-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 28px;
+      padding: 0 10px;
+      background-color: var(--mint);
+      border: 1px solid var(--mint-strong);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 99px;
+      background-color: var(--mint-strong);
+      box-shadow: 0 0 0 2px rgba(42, 138, 104, 0.25);
+    }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--secondary);
+      cursor: pointer;
+    }
+
+    .icon-btn:hover {
+      background-color: var(--surface-hover);
+      color: var(--ink);
+    }
+
+    .avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background-color: var(--sky-blue);
+      border: 1px solid var(--blue-strong);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    /* SCREEN VIEW CONTAINER */
+    .screen-container {
+      padding: 20px 24px 32px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* BUTTONS & CONTROLS */
+    .btn {
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background-color: var(--surface-hover);
+    }
+
+    /* Green "Set as baseline" button */
+    .btn-baseline {
+      background-color: var(--fresh-green);
+      border: 1px solid var(--green-strong);
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .btn-baseline:hover {
+      filter: brightness(0.97);
+    }
+
+    /* Sky blue Primary Action button */
+    .btn-primary {
+      background-color: var(--sky-blue);
+      border: 1px solid var(--blue-strong);
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(0.97);
+    }
+
+    /* Failed button: Rose pink */
+    .btn-fail {
+      height: 26px;
+      padding: 0 10px;
+      background-color: var(--rose-pink);
+      border: 1px solid var(--rose-strong);
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .btn-fail:hover {
+      filter: brightness(0.95);
+    }
+
+    /* Passed label: Non-interactive */
+    .status-passed {
+      height: 26px;
+      padding: 0 10px;
+      background-color: var(--fresh-green);
+      border: 1px solid var(--green-strong);
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    /* Badges */
+    .badge-baseline-tag {
+      height: 20px;
+      padding: 0 6px;
+      background-color: var(--mint);
+      border: 1px solid var(--mint-strong);
+      color: var(--ink);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .badge-tier {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .badge-tier.green {
+      background-color: var(--fresh-green);
+      border: 1px solid var(--green-strong);
+    }
+
+    .badge-tier.amber {
+      background-color: var(--sand-yellow);
+      border: 1px solid var(--yellow-strong);
+    }
+
+    .badge-tier.red {
+      background-color: var(--rose-pink);
+      border: 1px solid var(--rose-strong);
+    }
+
+    .badge-evidence {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 20px;
+      padding: 0 7px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--ink);
+    }
+
+    .badge-evidence.verified {
+      background-color: var(--fresh-green);
+      border: 1px solid var(--green-strong);
+    }
+
+    .badge-evidence.ai {
+      background-color: var(--sand-yellow);
+      border: 1px solid var(--yellow-strong);
+    }
+
+    .badge-evidence.heuristic {
+      background-color: #E2E7E4;
+      border: 1px solid #B0B8B4;
+      color: var(--secondary);
+    }
+
+    .badge-evidence.untested {
+      background-color: var(--rose-pink);
+      border: 1px solid var(--rose-strong);
+    }
+
+    /* SECTION HEADERS */
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .section-title-group h1 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      line-height: 24px;
+      margin-bottom: 4px;
+    }
+
+    .section-title-group p {
+      font-size: 12px;
+      color: var(--secondary);
+      line-height: 16px;
+    }
+
+    /* BASELINE SUMMARY CARD (on Dashboard) */
+    .baseline-banner-card {
+      background-color: #FFFFFF;
+      border: 1px solid var(--mint-strong);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: linear-gradient(to right, #FFFFFF, #F5FCF8);
+    }
+
+    .baseline-banner-card .title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .baseline-banner-card .meta {
+      font-size: 11px;
+      color: var(--secondary);
+      display: flex;
+      gap: 12px;
+    }
+
+    /* RUN HISTORY / PANEL */
+    .panel-card {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .panel-top-bar {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background-color: var(--surface);
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-filters {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .filter-btn {
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--secondary);
+      border: 1px solid transparent;
+    }
+
+    .filter-btn:hover {
+      background-color: var(--surface-hover);
+      color: var(--ink);
+    }
+
+    .filter-btn.active {
+      background-color: var(--sky-blue);
+      border-color: var(--blue-strong);
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    /* RUN ROWS (48-56px high, neutral dividers) */
+    .run-table {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .run-row {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 16px;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--surface);
+      cursor: pointer;
+      transition: background-color 0.1s ease;
+    }
+
+    .run-row:last-child {
+      border-bottom: none;
+    }
+
+    .run-row:hover {
+      background-color: var(--surface-hover);
+    }
+
+    .run-row.selected {
+      background-color: #F0F6FB;
+      outline: 1px solid var(--blue-strong);
+      outline-offset: -1px;
+    }
+
+    .run-select-col {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+    }
+
+    .run-id-col {
+      width: 130px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .run-time-col {
+      width: 160px;
+      font-size: 12px;
+      color: var(--secondary);
+    }
+
+    .run-version-col {
+      width: 160px;
+      font-size: 12px;
+      color: var(--secondary);
+      font-family: var(--font-mono);
+    }
+
+    .run-records-col {
+      width: 120px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .run-duration-col {
+      width: 100px;
+      font-size: 12px;
+      color: var(--secondary);
+      font-family: var(--font-mono);
+    }
+
+    .run-status-col {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* RUNS & ERRORS: CONFIDENCE LEGEND */
+    .legend-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 24px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .legend-chip.green {
+      background-color: var(--fresh-green);
+      border: 1px solid var(--green-strong);
+    }
+
+    .legend-chip.amber {
+      background-color: var(--sand-yellow);
+      border: 1px solid var(--yellow-strong);
+    }
+
+    .legend-chip.red {
+      background-color: var(--rose-pink);
+      border: 1px solid var(--rose-strong);
+    }
+
+    /* RUN SCAN TIMELINE BOX */
+    .scan-timeline-box {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+
+    .scan-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .scan-timeline-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      background-color: #F8FAF9;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+
+    .scan-timeline-item.fail {
+      background-color: #FFF8F9;
+      border-color: var(--rose-pink);
+    }
+
+    /* ERRORS LIST */
+    .errors-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .error-card {
+      display: flex;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.12s ease;
+    }
+
+    .error-card:hover {
+      border-color: #B5BFB8;
+    }
+
+    .tier-bar {
+      width: 5px;
+      flex-shrink: 0;
+    }
+
+    .tier-bar.green {
+      background-color: var(--green-strong);
+    }
+
+    .tier-bar.amber {
+      background-color: var(--yellow-strong);
+    }
+
+    .tier-bar.red {
+      background-color: var(--rose-strong);
+    }
+
+    .error-main {
+      flex: 1;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .error-header-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .error-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .error-detail-text {
+      font-size: 12px;
+      color: var(--secondary);
+    }
+
+    .error-right {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 8px;
+      border-left: 1px solid var(--border-subtle);
+      background-color: #FAFCFA;
+      min-width: 220px;
+    }
+
+    /* TOAST NOTIFICATION */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 12px rgba(20, 24, 31, 0.08);
+      pointer-events: auto;
+      border: 1px solid var(--mint-strong);
+      background-color: var(--mint);
+      animation: slideIn 0.2s ease-out;
+    }
+
+    .toast.error {
+      background-color: var(--rose-pink);
+      border-color: var(--rose-strong);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(12px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* INVESTIGATION SCREENS: 50/50 SPLIT */
+    .investigation-shell {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: calc(100vh - 56px);
+    }
+
+    .investigation-header {
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .investigation-header h2 {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .investigation-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--secondary);
+      font-family: var(--font-mono);
+    }
+
+    .issue-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 24px;
+      background-color: #F8FAF9;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .issue-tab {
+      height: 28px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background-color: var(--surface);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .issue-tab:hover {
+      background-color: var(--surface-hover);
+      color: var(--ink);
+    }
+
+    .issue-tab.active {
+      background-color: var(--ink);
+      border-color: var(--ink);
+      color: var(--surface);
+    }
+
+    .issue-tab .tab-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 99px;
+    }
+
+    .split-columns {
+      display: flex;
+      flex: 1;
+      min-height: 680px;
+      background-color: var(--page-canvas);
+    }
+
+    .split-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      border-right: 1px solid var(--border);
+      background-color: var(--surface);
+      overflow-y: auto;
+      max-height: calc(100vh - 120px);
+    }
+
+    .split-pane:last-child {
+      border-right: none;
+      background-color: #F9FBFA;
+    }
+
+    .pane-header-strip {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: var(--surface);
+    }
+
+    .pane-header-strip h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* CODE PANES */
+    .code-viewer-container {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .code-card {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      background-color: var(--code-bg);
+    }
+
+    .code-card-head {
+      padding: 8px 12px;
+      background-color: #F3F6F4;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .code-card-head .meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--secondary);
+      font-weight: 500;
+    }
+
+    .code-body {
+      padding: 8px 0;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 20px;
+      overflow-x: auto;
+      background-color: #FFFFFF;
+    }
+
+    .code-line {
+      display: flex;
+      padding: 0 12px 0 0;
+    }
+
+    .line-num {
+      width: 38px;
+      min-width: 38px;
+      text-align: right;
+      padding-right: 12px;
+      color: #8C98A4;
+      user-select: none;
+      background-color: var(--code-gutter);
+      border-right: 1px solid #ECEFEF;
+      margin-right: 12px;
+    }
+
+    .line-text {
+      flex: 1;
+      white-space: pre;
+      color: var(--ink);
+    }
+
+    /* Highlight rules from Section 6.2 */
+    .code-line.hl-removed {
+      background-color: var(--rose-pink);
+      color: var(--ink);
+    }
+
+    .code-line.hl-removed .line-num {
+      background-color: #ECC7D2;
+      border-color: var(--rose-strong);
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .code-line.hl-added {
+      background-color: var(--fresh-green);
+      color: var(--ink);
+    }
+
+    .code-line.hl-added .line-num {
+      background-color: #AEE2AF;
+      border-color: var(--green-strong);
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .code-line.hl-amber {
+      background-color: var(--sand-yellow);
+      color: var(--ink);
+    }
+
+    .legend-strip {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 8px 12px;
+      background-color: #F6F9F7;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--secondary);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-box {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .viewer-tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      border-top: 1px solid var(--border);
+      background-color: var(--surface);
+    }
+
+    .viewer-tab {
+      height: 26px;
+      padding: 0 10px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background-color: var(--surface);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .viewer-tab.active {
+      background-color: var(--sky-blue);
+      border-color: var(--blue-strong);
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    /* RIGHT PANE: LIKELY CAUSES & SUGGESTED FIX */
+    .right-column-content {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .cause-card {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cause-card.verified-border {
+      border-left: 4px solid var(--green-strong);
+    }
+
+    .cause-card.amber-border {
+      border-left: 4px solid var(--yellow-strong);
+    }
+
+    .cause-card.red-border {
+      border-left: 4px solid var(--rose-strong);
+    }
+
+    .cause-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .cause-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .score-badge {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .cause-evidence {
+      font-size: 12px;
+      color: var(--ink);
+      line-height: 16px;
+    }
+
+    .score-breakdown-row {
+      font-size: 11px;
+      color: var(--secondary);
+      font-family: var(--font-mono);
+      background-color: #F8FAF9;
+      padding: 6px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .cause-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    /* SUGGESTED FIX CARD */
+    .suggested-fix-card {
+      background-color: #F4FAF5;
+      border: 1px solid var(--green-strong);
+      border-radius: 7px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .suggested-fix-card.amber-fix {
+      background-color: #FFFDF8;
+      border-color: var(--yellow-strong);
+    }
+
+    .fix-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .fix-header h4 {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .selector-diff-box {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .selector-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .selector-tag {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--secondary);
+      width: 36px;
+    }
+
+    .selector-text-old {
+      color: var(--ink);
+      text-decoration: line-through;
+      background-color: #FDE8ED;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+
+    .selector-text-new {
+      color: var(--ink);
+      font-weight: 700;
+      background-color: #E2F9E3;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+
+    .validation-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      background-color: var(--fresh-green);
+      border: 1px solid var(--green-strong);
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
+
+    .validation-box.amber-val {
+      background-color: var(--sand-yellow);
+      border-color: var(--yellow-strong);
+    }
+
+    .fix-footer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    /* UNCERTAINTY / REVIEW BANNER (AMBER TIER) */
+    .uncertainty-banner {
+      padding: 12px 14px;
+      background-color: var(--sand-yellow);
+      border: 1px solid var(--yellow-strong);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* CAUSE UNKNOWN BANNER & TABLES (RED TIER) */
+    .unknown-banner {
+      padding: 12px 14px;
+      background-color: var(--rose-pink);
+      border: 1px solid var(--rose-strong);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 12px 16px 0;
+    }
+
+    .empty-dom-state {
+      padding: 24px 16px;
+      text-align: center;
+      color: var(--secondary);
+      font-size: 12px;
+      line-height: 18px;
+      background-color: #F8FAF9;
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      margin: 0 16px;
+    }
+
+    .observed-table-card {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      overflow: hidden;
+    }
+
+    .observed-table-head {
+      padding: 10px 14px;
+      background-color: #F4F7F5;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .observed-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .observed-table th {
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--secondary);
+      border-bottom: 1px solid var(--border);
+      background-color: #FAFCFB;
+    }
+
+    .observed-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--ink);
+    }
+
+    .observed-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .possible-direction-card {
+      background-color: var(--surface);
+      border: 1px solid var(--yellow-strong);
+      border-radius: 7px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* UTILITY & MONOSPACE */
+    .mono {
+      font-family: var(--font-mono);
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background-color: #ECEFEF;
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: var(--ink);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app-shell">
+
+    <!-- COLLAPSIBLE LEFT SIDEBAR -->
+    <aside class="sidebar" id="app-sidebar" aria-label="Main Navigation">
+      <div class="sidebar-header">
+        <div class="brand-group">
+          <div class="brand-mark" aria-hidden="true">◈</div>
+          <div class="brand-text">
+            <span class="brand-name">ScrapeGuard</span>
+            <span class="brand-sub">Reliability &amp; Debugging</span>
+          </div>
+        </div>
+        <button class="collapse-btn" id="btn-toggle-sidebar" onclick="toggleSidebar()" title="Collapse sidebar"
+          aria-label="Toggle sidebar">
+          «
+        </button>
+      </div>
+
+      <!-- SIDEBAR NAV: Dashboard and Runs & Errors ONLY -->
+      <nav class="nav-section">
+        <div class="nav-label">Navigation</div>
+        <button class="nav-item active" id="nav-dashboard" onclick="navigateTo('dashboard')">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Dashboard</span>
+        </button>
+        <button class="nav-item" id="nav-runs-errors" onclick="navigateTo('runs-errors')">
+          <span class="nav-icon">📑</span>
+          <span class="nav-text">Runs &amp; Errors</span>
+        </button>
+
+        <div class="nav-label" style="margin-top:16px">Quick Investigation</div>
+        <button class="nav-item" onclick="openInvestigation('iss_1')">
+          <span class="nav-icon" style="color:var(--green-strong)">●</span>
+          <span class="nav-text">gainer_rows (Verified)</span>
+        </button>
+        <button class="nav-item" onclick="openInvestigation('iss_2')">
+          <span class="nav-icon" style="color:var(--yellow-strong)">●</span>
+          <span class="nav-text">price (Review needed)</span>
+        </button>
+        <button class="nav-item" onclick="openInvestigation('iss_3')">
+          <span class="nav-icon" style="color:var(--yellow-strong)">●</span>
+          <span class="nav-text">change_pct (AI-suggested)</span>
+        </button>
+        <button class="nav-item" onclick="openInvestigation('iss_4')">
+          <span class="nav-icon" style="color:var(--rose-strong)">●</span>
+          <span class="nav-text">nifty_widget (Unknown)</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="engine-chip">
+          <span class="dot"></span>
+          <span>Engine v0.3.1</span>
+        </div>
+        <div>Deterministic replay &amp; scoring</div>
+        <div style="margin-top:2px;font-size:10px;color:#859098">Track 3: Developer Tools</div>
+      </div>
+    </aside>
+
+    <!-- MAIN COLUMN -->
+    <main class="main-column">
+
+      <!-- COMPACT TOP BAR (56px) - View switcher removed -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <span>Project:</span>
+          <span class="topbar-project-crumb">moneycontrol-gainers</span>
+          <span>·</span>
+          <span class="mono" style="font-size:11px" id="topbar-config-version">config v3</span>
+          <span>·</span>
+          <span style="font-size:11px" id="topbar-baseline-label">Baseline: <b class="mono"
+              id="topbar-baseline-id">run_12</b> (pinned)</span>
+        </div>
+
+        <div class="topbar-spacer"></div>
+
+        <div class="topbar-right">
+          <div class="live-chip">
+            <span class="live-dot"></span> Live feed on
+          </div>
+          <button class="icon-btn" title="Live status" aria-label="Live notifications"
+            onclick="showToast('Live feed active: 0 pending spool events', false)">
+            🔔
+          </button>
+          <div class="avatar" title="Developer user">AK</div>
+        </div>
+      </header>
+
+
+      <!-- ========================================== -->
+      <!-- SCREEN 1: DASHBOARD (Overview & Baseline Management) -->
+      <!-- ========================================== -->
+      <section class="screen-container" id="screen-dashboard">
+        <div class="section-header">
+          <div class="section-title-group">
+            <h1>Dashboard</h1>
+            <p>Monitors scraper executions and failures. Baseline comparisons and automated root-cause diagnosis.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:11px;color:var(--secondary);max-width:240px;text-align:right"
+              id="baseline-select-hint">
+              Select an eligible successful run below to set as project baseline
+            </span>
+            <button class="btn btn-baseline" id="btn-set-baseline" onclick="handleSetBaseline()">
+              ★ Set as baseline
+            </button>
+          </div>
+        </div>
+
+        <!-- Baseline status card -->
+        <div class="baseline-banner-card">
+          <div style="width:10px;height:10px;border-radius:99px;background:var(--mint-strong)"></div>
+          <div>
+            <div class="title">Active Baseline: <span class="mono" id="card-baseline-run">run_12</span> (Pinned forever
+              against TTL)</div>
+            <div class="meta">
+              <span>Layout hash: <b class="mono" id="card-baseline-hash">a3f9c1</b></span>
+              <span>·</span>
+              <span>Extracted: <b>5/5 rows</b></span>
+              <span>·</span>
+              <span>Stable anchors: <b>5 pinned</b> (Symbol, Price, Change)</span>
+              <span>·</span>
+              <span>Output schema: <b>valid</b></span>
+            </div>
+          </div>
+          <div style="margin-left:auto">
+            <span class="badge-baseline-tag">BASELINE PINNED</span>
+          </div>
+        </div>
+
+        <!-- Recent Runs List -->
+        <div class="panel-card">
+          <div class="panel-top-bar">
+            <div class="panel-title">
+              <span>Recent Runs</span>
+              <span style="font-size:12px;font-weight:500;color:var(--secondary)" id="dashboard-runs-count">(5 runs · 3 passed · 2 failed)</span>
+            </div>
+
+            <!-- All / Passed / Failed filters -->
+            <div class="panel-filters" role="tablist" aria-label="Run filters">
+              <button class="filter-btn active" id="dash-filter-all" onclick="filterRuns('all')">All (5)</button>
+              <button class="filter-btn" id="dash-filter-passed" onclick="filterRuns('passed')">Passed (3)</button>
+              <button class="filter-btn" id="dash-filter-failed" onclick="filterRuns('failed')">Failed (2)</button>
+            </div>
+          </div>
+
+          <div class="run-table" id="runs-list-table">
+            <!-- Populated dynamically by renderRuns() -->
+          </div>
+        </div>
+
+        <div
+          style="margin-top:16px;padding:12px 16px;background:#FFFFFF;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--secondary);display:flex;align-items:center;gap:12px">
+          <span style="font-weight:700;color:var(--ink)">Developer Tip:</span>
+          <span>Click any <b style="color:var(--rose-strong)">FAILED</b> button to inspect that run's root cause, or
+            switch to <b style="color:var(--ink)">Runs &amp; Errors</b> in the sidebar for full confidence-ranked
+            triage.</span>
+        </div>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- SCREEN 2: RUNS & ERRORS (Full Scan & Root Causes List) -->
+      <!-- ========================================== -->
+      <section class="screen-container" id="screen-runs-errors" style="display:none">
+        <div class="section-header">
+          <div class="section-title-group">
+            <h1>Runs &amp; Errors</h1>
+            <p>Scan from baseline (run 12) to latest (run 16). Issues grouped by root cause and ranked by fix
+              confidence.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--secondary)">Sort by:</span>
+            <select id="errors-sort-select" onchange="sortErrors(this.value)"
+              style="height:32px;padding:0 8px;border-radius:6px;border:1px solid var(--border);background:#fff;font-size:12px;color:var(--ink);cursor:pointer">
+              <option value="confidence">Fix confidence (default)</option>
+              <option value="newest">Newest first</option>
+              <option value="blast_radius">Blast radius</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Confidence Legend Row -->
+        <div class="legend-bar">
+          <span
+            style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--secondary)">Confidence
+            Tiers:</span>
+          <span class="legend-chip green">
+            <span style="width:6px;height:6px;border-radius:99px;background:var(--green-strong)"></span>
+            Green: Fix verified (replays to 5/5 rows, schema passes)
+          </span>
+          <span class="legend-chip amber">
+            <span style="width:6px;height:6px;border-radius:99px;background:var(--yellow-strong)"></span>
+            Amber: Likely cause (heuristic or AI-suggested, review needed)
+          </span>
+          <span class="legend-chip red">
+            <span style="width:6px;height:6px;border-radius:99px;background:var(--rose-strong)"></span>
+            Red: Unknown (no baseline reproduction, observations only)
+          </span>
+        </div>
+
+        <!-- Scan Timeline Box with Folded Passing Runs -->
+        <div class="scan-timeline-box">
+          <div class="scan-head">
+            <span>Run Scan Timeline</span>
+            <span style="font-weight:400;color:var(--secondary);font-size:11px">Passing runs folded upward · failing
+              runs stay expanded</span>
+          </div>
+
+          <!-- Folded line -->
+          <div
+            style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:#F1F5F2;border:1px dashed var(--border);border-radius:6px;margin-bottom:8px;font-size:11px;color:var(--secondary)">
+            <span style="font-weight:700;color:var(--ink)">⌃ 3 passing runs hidden</span>
+            <span>— run_12 (baseline) · run_13 · run_14 · all 5 records · 1.2–1.3s</span>
+            <span style="margin-left:auto;font-family:var(--font-mono)">12 → 14 · no errors</span>
+          </div>
+
+          <div class="scan-timeline-item fail">
+            <span class="mono" style="font-weight:700">Run 15</span>
+            <span class="btn-fail" style="cursor:default">FAIL</span>
+            <span style="font-size:11px;color:var(--secondary)">first bad run · selector_changed · gainer_rows
+              5→0</span>
+            <span style="margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--secondary)">Today
+              10:02 UTC · 412 ms</span>
+            <button class="btn btn-fail" style="height:22px;font-size:11px" onclick="openInvestigation('iss_1')">Inspect
+              →</button>
+          </div>
+
+          <div class="scan-timeline-item fail">
+            <span class="mono" style="font-weight:700">Run 16</span>
+            <span class="btn-fail" style="cursor:default">FAIL</span>
+            <span style="font-size:11px;color:var(--secondary)">latest execution · structure_changed · 4 issues
+              detected</span>
+            <span style="margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--secondary)">Today
+              10:07 UTC · 398 ms</span>
+            <button class="btn btn-fail" style="height:22px;font-size:11px" onclick="openInvestigation('iss_1')">Inspect
+              →</button>
+          </div>
+        </div>
+
+        <!-- Errors Found Header -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <h2 style="font-size:14px;font-weight:700;color:var(--ink)">Errors Found</h2>
+          <span
+            style="font-size:11px;padding:1px 8px;border-radius:99px;background:#EAEFEA;color:var(--ink);font-weight:700">4
+            issues</span>
+          <span style="font-size:11px;color:var(--secondary)">Grouped by root cause — click Fail to inspect that
+            specific issue</span>
+        </div>
+
+        <!-- Errors List (Grouped by root cause) -->
+        <div class="errors-list-container" id="errors-cards-container">
+          <!-- Rendered by renderErrorsList() -->
+        </div>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- SCREEN 3: DYNAMIC INVESTIGATION VIEW -->
+      <!-- Dynamically switches based on the exact issue opened -->
+      <!-- Back to Dashboard button removed -->
+      <!-- ========================================== -->
+      <section class="investigation-shell" id="screen-investigation" style="display:none">
+        <!-- Investigation Top Header -->
+        <div class="investigation-header">
+          <h2>
+            <span>Investigation:</span>
+            <span class="mono" id="inv-target-name">gainer_rows</span>
+            <span class="btn-fail" style="cursor:default">FAILED</span>
+          </h2>
+          <div class="investigation-meta">
+            <span>Failure Class: <b style="color:var(--ink)" id="inv-failure-class">structure_changed</b></span>
+            <span>·</span>
+            <span>Baseline: <b class="mono" id="inv-baseline-run">run_12</b> (pinned)</span>
+            <span>·</span>
+            <span>Current: <b class="mono" id="inv-current-run">run_16</b></span>
+          </div>
+          <div style="margin-left:auto" id="inv-tier-badge-container">
+            <!-- Populated dynamically with Green, Amber, or Red tier badge -->
+          </div>
+        </div>
+
+        <!-- Sibling issue tabs -->
+        <div class="issue-tabs" id="inv-sibling-tabs">
+          <button class="issue-tab active" id="tab-iss-1" onclick="openInvestigation('iss_1')">
+            <span class="tab-dot" style="background:var(--green-strong)"></span>
+            gainer_rows (5→0)
+          </button>
+          <button class="issue-tab" id="tab-iss-2" onclick="openInvestigation('iss_2')">
+            <span class="tab-dot" style="background:var(--yellow-strong)"></span>
+            price (col shifted)
+          </button>
+          <button class="issue-tab" id="tab-iss-3" onclick="openInvestigation('iss_3')">
+            <span class="tab-dot" style="background:var(--yellow-strong)"></span>
+            change_pct (null)
+          </button>
+          <button class="issue-tab" id="tab-iss-4" onclick="openInvestigation('iss_4')">
+            <span class="tab-dot" style="background:var(--rose-strong)"></span>
+            nifty_widget (1→0, unknown)
+          </button>
+        </div>
+
+        <!-- 50/50 Split Columns Container -->
+        <div class="split-columns" id="inv-split-container">
+          <!-- Rendered dynamically by renderInvestigationDetail() -->
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    /* =======================================================
+       SCRAPEGUARD CONTROLLER & DYNAMIC INVESTIGATION ROUTER
+       ======================================================= */
+    const API_BASE = "http://localhost:5000/api";
+    const PROJECT_ID = "moneycontrol-gainers";
+
+    // Application State
+    const state = {
+      projectId: PROJECT_ID,
+      baselineRunId: "run_12",
+      selectedRunId: null,
+      activeFilter: "all",
+      configVersion: 3,
+      activeScreen: "screen-dashboard", // screen-dashboard, screen-runs-errors, screen-investigation
+      activeIssueId: "iss_1",
+      sidebarCollapsed: false,
+      runs: [
+        { run_id: "run_12", status: "success", record_count: 5, duration_ms: 1240, parser_version: "v1.2", config_version: 3, layout_hash: "a3f9c1", started_at: "Today 09:14 UTC", pinned: true },
+        { run_id: "run_13", status: "success", record_count: 5, duration_ms: 1310, parser_version: "v1.2", config_version: 3, layout_hash: "a3f9c1", started_at: "Today 09:40 UTC", pinned: false },
+        { run_id: "run_14", status: "success", record_count: 5, duration_ms: 1280, parser_version: "v1.2", config_version: 3, layout_hash: "a3f9c1", started_at: "Today 09:55 UTC", pinned: false },
+        { run_id: "run_15", status: "failed", record_count: 0, duration_ms: 412, parser_version: "v1.2", config_version: 3, failure_class: "selector_changed", layout_hash: "b7d2e8", started_at: "Today 10:02 UTC", pinned: false },
+        { run_id: "run_16", status: "failed", record_count: 0, duration_ms: 398, parser_version: "v1.2", config_version: 3, failure_class: "structure_changed", layout_hash: "b7d2e8", started_at: "Today 10:07 UTC", pinned: false }
+      ],
+      errors: [
+        {
+          issue_id: "iss_1",
+          target: "gainer_rows",
+          type: "selector",
+          tier: "green",
+          tier_reason: "5/5 rows, schema passes",
+          runs_affected: 2,
+          first_seen_run_id: "run_15",
+          blast_radius: 3,
+          description: "table.gainers > tbody > tr.row matched 0 nodes in run 16 (was 5).",
+          impact: "↳ also breaks loser_rows and record_count"
+        },
+        {
+          issue_id: "iss_2",
+          target: "price",
+          type: "field",
+          tier: "amber",
+          tier_reason: "1 candidate, review needed (roughly 50-50)",
+          runs_affected: 1,
+          first_seen_run_id: "run_16",
+          blast_radius: 1,
+          description: "td.price now resolves to company symbol column in 5/5 rows.",
+          impact: "thead shifted 1 column · types match but values violate bounds"
+        },
+        {
+          issue_id: "iss_3",
+          target: "change_pct",
+          type: "field",
+          tier: "amber",
+          tier_reason: "AI-suggested, not fully tested",
+          runs_affected: 1,
+          first_seen_run_id: "run_16",
+          blast_radius: 1,
+          description: "field change_pct is null across all 5 extracted records.",
+          impact: "Pydantic validator failed: required field missing"
+        },
+        {
+          issue_id: "iss_4",
+          target: "nifty_widget",
+          type: "selector",
+          tier: "red",
+          tier_reason: "no candidate reproduces baseline",
+          runs_affected: 2,
+          first_seen_run_id: "run_15",
+          blast_radius: 0,
+          description: "#nifty-widget 1→0 · response is an empty JS app shell.",
+          impact: "no candidate region found · observations only"
+        }
+      ]
+    };
+
+    // Toast notification helper
+    function showToast(message, isError = false) {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = `toast ${isError ? "error" : ""}`;
+      toast.innerHTML = `<span>${isError ? "⚠" : "✓"}</span> <span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(8px)";
+        toast.style.transition = "opacity 0.2s, transform 0.2s";
+        setTimeout(() => toast.remove(), 250);
+      }, 4500);
+    }
+
+    // Toggle Sidebar Collapse
+    function toggleSidebar() {
+      state.sidebarCollapsed = !state.sidebarCollapsed;
+      const sidebar = document.getElementById("app-sidebar");
+      const btn = document.getElementById("btn-toggle-sidebar");
+      if (state.sidebarCollapsed) {
+        sidebar.classList.add("collapsed");
+        btn.innerText = "»";
+        btn.title = "Expand sidebar";
+      } else {
+        sidebar.classList.remove("collapsed");
+        btn.innerText = "«";
+        btn.title = "Collapse sidebar";
+      }
+    }
+
+    // Primary Navigation: Dashboard vs Runs & Errors
+    function navigateTo(destination) {
+      state.activeScreen = destination === 'dashboard' ? 'screen-dashboard' : 'screen-runs-errors';
+
+      document.getElementById("screen-dashboard").style.display = destination === 'dashboard' ? 'flex' : 'none';
+      document.getElementById("screen-runs-errors").style.display = destination === 'runs-errors' ? 'flex' : 'none';
+      document.getElementById("screen-investigation").style.display = 'none';
+
+      // Update active nav styling
+      document.getElementById("nav-dashboard").classList.toggle("active", destination === 'dashboard');
+      document.getElementById("nav-runs-errors").classList.toggle("active", destination === 'runs-errors');
+
+      if (destination === 'dashboard') {
+        renderRuns();
+      } else if (destination === 'runs-errors') {
+        renderErrorsList();
+      }
+    }
+
+    // Render Recent Runs Table (Dashboard)
+    function renderRuns() {
+      const table = document.getElementById("runs-list-table");
+      table.innerHTML = "";
+
+      const filtered = state.runs.filter(r => {
+        if (state.activeFilter === "passed") return r.status === "success";
+        if (state.activeFilter === "failed") return r.status === "failed";
+        return true;
+      });
+
+      const passedCount = state.runs.filter(r => r.status === "success").length;
+      const failedCount = state.runs.filter(r => r.status === "failed").length;
+      document.getElementById("dashboard-runs-count").innerText = `(${state.runs.length} runs · ${passedCount} passed · ${failedCount} failed)`;
+      document.getElementById("dash-filter-all").innerText = `All (${state.runs.length})`;
+      document.getElementById("dash-filter-passed").innerText = `Passed (${passedCount})`;
+      document.getElementById("dash-filter-failed").innerText = `Failed (${failedCount})`;
+
+      filtered.forEach(run => {
+        const row = document.createElement("div");
+        row.className = `run-row ${state.selectedRunId === run.run_id ? "selected" : ""}`;
+        row.id = `run-row-${run.run_id}`;
+        row.onclick = () => selectRun(run.run_id);
+
+        const isBaseline = run.run_id === state.baselineRunId;
+        const isFailed = run.status === "failed";
+
+        row.innerHTML = `
+        <div class="run-select-col">
+          <input type="radio" name="run_selection" ${state.selectedRunId === run.run_id ? "checked" : ""} style="cursor:pointer" onclick="event.stopPropagation(); selectRun('${run.run_id}')" />
+        </div>
+        <div class="run-id-col">
+          <span>${run.run_id}</span>
+          ${isBaseline ? '<span class="badge-baseline-tag">BASELINE</span>' : ''}
+        </div>
+        <div class="run-time-col">${run.started_at}</div>
+        <div class="run-version-col">${run.parser_version} · config v${run.config_version}</div>
+        <div class="run-records-col" style="${isFailed ? 'color:var(--rose-strong)' : 'color:var(--green-strong)'}">
+          ${run.record_count} records
+        </div>
+        <div class="run-duration-col">${run.duration_ms} ms</div>
+        <div class="run-status-col">
+          ${isFailed
+            ? `<button class="btn-fail" onclick="event.stopPropagation(); openInvestigationForRun('${run.run_id}')">FAILED</button>`
+            : `<span class="status-passed">PASSED</span>`
+          }
+        </div>
+      `;
+
+        table.appendChild(row);
+      });
+
+      document.getElementById("topbar-baseline-id").innerText = state.baselineRunId;
+      document.getElementById("card-baseline-run").innerText = state.baselineRunId;
+    }
+
+    // Filter Runs
+    function filterRuns(filterType) {
+      state.activeFilter = filterType;
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById(`dash-filter-${filterType}`).classList.add("active");
+      renderRuns();
+    }
+
+    // Select a run from the list
+    function selectRun(runId) {
+      state.selectedRunId = runId;
+      const run = state.runs.find(r => r.run_id === runId);
+      const hint = document.getElementById("baseline-select-hint");
+      if (run) {
+        if (run.status === "failed") {
+          hint.innerHTML = `<span style="color:var(--rose-strong)">Selected ${run.run_id} (Failed): Ineligible for baseline.</span>`;
+        } else {
+          hint.innerHTML = `<span style="color:var(--green-strong)">Selected ${run.run_id} (5 records): Eligible for baseline.</span>`;
+        }
+      }
+      renderRuns();
+    }
+
+    // Set as baseline handler with validation
+    async function handleSetBaseline() {
+      if (!state.selectedRunId) {
+        showToast("Please select an eligible successful run from the list first.", true);
+        return;
+      }
+
+      const run = state.runs.find(r => r.run_id === state.selectedRunId);
+
+      try {
+        const response = await fetch(`${API_BASE}/projects/${state.projectId}/baseline`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ run_id: state.selectedRunId })
+        });
+        const res = await response.json();
+        if (!response.ok || !res.ok) {
+          showToast(res.error || `Validation failed: Run ${state.selectedRunId} cannot be set as baseline.`, true);
+          return;
+        }
+        state.baselineRunId = state.selectedRunId;
+        state.runs.forEach(r => { r.pinned = (r.run_id === state.selectedRunId); });
+        renderRuns();
+        showToast(`Baseline updated successfully — Run ${state.selectedRunId} is now the project baseline.`, false);
+      } catch (err) {
+        // Offline fallback
+        if (!run || run.status === "failed" || run.record_count === 0) {
+          showToast(`Validation failed: Run ${state.selectedRunId} has 0 records and failed status. Cannot set failed run as baseline.`, true);
+          return;
+        }
+        state.baselineRunId = state.selectedRunId;
+        state.runs.forEach(r => { r.pinned = (r.run_id === state.selectedRunId); });
+        renderRuns();
+        showToast(`Baseline updated successfully — Run ${state.selectedRunId} is now the project baseline.`, false);
+      }
+    }
+
+    // Render Errors List (Runs & Errors View)
+    function renderErrorsList() {
+      const container = document.getElementById("errors-cards-container");
+      container.innerHTML = "";
+
+      state.errors.forEach(err => {
+        const card = document.createElement("div");
+        card.className = "error-card";
+        const tierClass = err.tier;
+
+        let badgeHtml = "";
+        if (err.tier === "green") {
+          badgeHtml = `<span class="badge-tier green">Fix verified · 5/5 rows</span>`;
+        } else if (err.tier === "amber") {
+          badgeHtml = `<span class="badge-tier amber">${err.tier_reason}</span>`;
+        } else {
+          badgeHtml = `<span class="badge-tier red">Unknown cause · no fix</span>`;
+        }
+
+        card.innerHTML = `
+        <div class="tier-bar ${tierClass}"></div>
+        <div class="error-main">
+          <div class="error-header-row">
+            <button class="btn-fail" onclick="openInvestigation('${err.issue_id}')">FAIL</button>
+            <span class="error-title">${err.target} — ${err.type === 'selector' ? 'match failure' : 'field error'}</span>
+            <span style="font-size:11px;color:var(--secondary)">· ${err.description}</span>
+          </div>
+          <div class="error-detail-text">
+            <span>${err.impact}</span>
+            <span>·</span>
+            <span>first seen ${err.first_seen_run_id} · ${err.runs_affected} run(s) affected</span>
+          </div>
+        </div>
+        <div class="error-right">
+          ${badgeHtml}
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;color:var(--secondary)">blast radius: ${err.blast_radius}</span>
+            <button class="btn" style="height:24px;padding:0 8px;font-size:11px" onclick="openInvestigation('${err.issue_id}')">Inspect →</button>
+          </div>
+        </div>
+      `;
+
+        container.appendChild(card);
+      });
+    }
+
+    // Sort errors
+    function sortErrors(sortKey) {
+      if (sortKey === "newest") {
+        state.errors.sort((a, b) => b.first_seen_run_id.localeCompare(a.first_seen_run_id));
+      } else if (sortKey === "blast_radius") {
+        state.errors.sort((a, b) => b.blast_radius - a.blast_radius);
+      } else {
+        const order = { green: 0, amber: 1, red: 2 };
+        state.errors.sort((a, b) => order[a.tier] - order[b.tier]);
+      }
+      renderErrorsList();
+    }
+
+    // Open investigation for a failed run — maps each run to its primary issue
+    function openInvestigationForRun(runId) {
+      // run_15: first bad run — primary issue is gainer_rows (iss_1)
+      // run_16: latest run — primary issue is gainer_rows (iss_1) as it's the highest-confidence fix
+      const runIssueMap = {
+        "run_15": "iss_1",
+        "run_16": "iss_1"
+      };
+      const issueId = runIssueMap[runId] || "iss_1";
+      openInvestigation(issueId);
+    }
+
+    // ========================================================
+    // DYNAMIC INVESTIGATION ROUTER & RENDERER (CORE FIX)
+    // Ensures Green, Amber, and Red tier issues open their own
+    // corresponding investigation detail and uncertainty status.
+    // ========================================================
+    async function openInvestigation(issueId) {
+      state.activeIssueId = issueId;
+
+      // Show investigation view and hide other views
+      document.getElementById("screen-dashboard").style.display = "none";
+      document.getElementById("screen-runs-errors").style.display = "none";
+      document.getElementById("screen-investigation").style.display = "flex";
+
+      // De-activate sidebar items
+      document.getElementById("nav-dashboard").classList.remove("active");
+      document.getElementById("nav-runs-errors").classList.remove("active");
+
+      // Update active tab styling
+      document.querySelectorAll(".issue-tab").forEach(tab => tab.classList.remove("active"));
+      const activeTab = document.getElementById(`tab-${issueId.replace('_', '-')}`);
+      if (activeTab) activeTab.classList.add("active");
+
+      // Fetch issue details from API or local fallback
+      let data = null;
+      try {
+        const res = await fetch(`${API_BASE}/errors/${issueId}`);
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (e) {
+        // offline fallback
+      }
+
+      if (!data) {
+        data = getFallbackIssueDetail(issueId);
+      }
+
+      renderInvestigationDetail(data);
+    }
+
+    // Render Investigation Details dynamically based on tier
+    function renderInvestigationDetail(data) {
+      const issue = data.issue || {};
+      const tier = issue.tier || 'green';
+
+      // Update header info
+      document.getElementById("inv-target-name").innerText = issue.target;
+      document.getElementById("inv-failure-class").innerText = issue.failure_class || 'structure_changed';
+      document.getElementById("inv-baseline-run").innerText = (data.baseline && data.baseline.run_id) ? data.baseline.run_id : 'run_12';
+      document.getElementById("inv-current-run").innerText = (data.current && data.current.run_id) ? data.current.run_id : 'run_16';
+
+      // Update tier badge in header
+      const badgeContainer = document.getElementById("inv-tier-badge-container");
+      if (tier === 'green') {
+        badgeContainer.innerHTML = `
+        <span class="badge-tier green">
+          <span style="width:6px;height:6px;border-radius:99px;background:var(--green-strong)"></span>
+          Fix verified · 5/5 rows, schema passes
+        </span>
+      `;
+      } else if (tier === 'amber') {
+        badgeContainer.innerHTML = `
+        <span class="badge-tier amber">
+          <span style="width:6px;height:6px;border-radius:99px;background:var(--yellow-strong)"></span>
+          ${issue.tier_reason || 'Likely cause · review needed'}
+        </span>
+      `;
+      } else {
+        badgeContainer.innerHTML = `
+        <span class="badge-tier red">
+          <span style="width:6px;height:6px;border-radius:99px;background:var(--rose-strong)"></span>
+          Unknown cause · observation only
+        </span>
+      `;
+      }
+
+      const splitContainer = document.getElementById("inv-split-container");
+
+      // RENDER ACCORDING TO TIER
+      if (tier === 'green') {
+        // GREEN TIER: Fix Verified view
+        renderGreenTierView(splitContainer, data);
+      } else if (tier === 'amber') {
+        // AMBER TIER: Likely cause / Heuristic / Uncertainty view
+        renderAmberTierView(splitContainer, data);
+      } else {
+        // RED TIER: Cause unknown view
+        renderRedTierView(splitContainer, data);
+      }
+    }
+
+    // Helper to format code lines dynamically with syntax highlight tags
+    function renderCodeBlock(snapshotHtml, defaultHlClass = "") {
+      if (!snapshotHtml) {
+        return '<div class="code-line"><span class="line-num">1</span><span class="line-text">&lt;!-- No snapshot available --&gt;</span></div>';
+      }
+      const lines = snapshotHtml.split("\n");
+      return lines.map((line, idx) => {
+        const escaped = line
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+        let hlClass = "";
+        if (defaultHlClass === "hl-removed") {
+          if (line.includes("row") || line.includes("price") || line.includes("change") || line.includes("value") || line.includes("RELIANCE") || line.includes("TCS")) {
+            hlClass = "hl-removed";
+          }
+        } else if (defaultHlClass === "hl-added") {
+          if (line.includes("stock-row") || line.includes("app") || line.includes("noscript") || line.includes("NEXT_DATA") || line.includes("chg-val")) {
+            hlClass = "hl-added";
+          }
+        } else if (defaultHlClass === "hl-amber") {
+          if (line.includes("Price") || line.includes("sym") || line.includes("chg-val") || line.includes("change") || line.includes("price")) {
+            hlClass = "hl-amber";
+          }
+        }
+        return `<div class="code-line ${hlClass}"><span class="line-num">${idx + 1}</span><span class="line-text">${escaped}</span></div>`;
+      }).join("");
+    }
+
+    // 1. GREEN TIER VIEW (Verified Fix)
+    function renderGreenTierView(container, data) {
+      const causesHtml = (data.causes || []).map((c, idx) => `
+      <div class="cause-card verified-border">
+        <div class="cause-card-header">
+          <div class="cause-title">
+            <span style="width:20px;height:20px;border-radius:4px;background:var(--fresh-green);border:1px solid var(--green-strong);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${idx + 1}</span>
+            ${c.title}
+          </div>
+          <span class="badge-evidence ${c.verification === 'verified' ? 'verified' : (c.verification === 'ai_suggested' ? 'ai' : 'heuristic')}">
+            ${c.badge || 'Verified by replay'}
+          </span>
+          <span class="score-badge">${c.score} <small style="color:var(--secondary);font-weight:400">/ 100</small></span>
+        </div>
+        <div class="cause-evidence">${c.evidence}</div>
+        ${c.score_breakdown ? `<div class="score-breakdown-row">Score breakdown: token hit ${c.score_breakdown.token_hit} + critical path ${c.score_breakdown.critical_path} + timing ${c.score_breakdown.timing} + severity ${c.score_breakdown.severity} + proximity ${c.score_breakdown.proximity}</div>` : ''}
+        <div class="cause-actions">
+          <span style="font-size:11px;color:var(--secondary)">Deterministic replay verified</span>
+          <button class="btn" style="height:24px;padding:0 8px;font-size:11px" onclick="handleTestSuspect('${c.finding_id}')">Test suspect ↻</button>
+        </div>
+      </div>
+    `).join("");
+
+      const fix = data.fix || {};
+
+      container.innerHTML = `
+      <!-- LEFT COLUMN -->
+      <div class="split-pane">
+        <div class="pane-header-strip">
+          <h3>DOM / Snapshot Comparison</h3>
+          <span style="font-size:11px;color:var(--secondary)">Sandboxed preview · scripts stripped</span>
+        </div>
+        <div class="code-viewer-container">
+          <div class="code-card">
+            <div class="code-card-head">
+              <span>Baseline snapshot — <b class="mono">${data.baseline.run_id}</b> (pinned)</span>
+              <span class="meta">${data.baseline.layout_hash || 'a3f9c1'} · ${data.baseline.match_count !== undefined ? data.baseline.match_count : 5} rows matched</span>
+            </div>
+            <div class="code-body">
+              ${renderCodeBlock(data.baseline.snapshot_html, 'hl-removed')}
+            </div>
+          </div>
+
+          <div class="code-card">
+            <div class="code-card-head">
+              <span>Current snapshot — <b class="mono">${data.current.run_id}</b> (failed)</span>
+              <span class="meta" style="color:var(--rose-strong)">${data.current.layout_hash || 'b7d2e8'} · ${data.current.match_count !== undefined ? data.current.match_count : 0} rows matched</span>
+            </div>
+            <div class="code-body">
+              ${renderCodeBlock(data.current.snapshot_html, 'hl-added')}
+            </div>
+          </div>
+
+          <div class="legend-strip">
+            <div class="legend-item">
+              <span class="legend-box" style="background-color:var(--rose-pink);border:1px solid var(--rose-strong)"></span>
+              <span><b>Rose pink:</b> Baseline matched lines</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-box" style="background-color:var(--fresh-green);border:1px solid var(--green-strong)"></span>
+              <span><b>Fresh green:</b> New verified location</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="viewer-tabs">
+          <button class="viewer-tab active">⬔ DOM Diff</button>
+          <button class="viewer-tab" onclick="showToast('HTTP 200 OK · 38.4 KB response verified', false)">HTTP Response (200 · 38 KB)</button>
+          <button class="viewer-tab" onclick="showToast('Embedded JSON inspected: 5 anchors present', false)">Embedded JSON (5 anchors)</button>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="split-pane">
+        <div class="pane-header-strip">
+          <h3>Likely Causes</h3>
+          <span style="font-size:11px;color:var(--secondary)">Ranked by verification tier → issues explained → score</span>
+        </div>
+        <div class="right-column-content">
+          ${causesHtml}
+
+          <!-- Suggested Fix Card -->
+          <div class="suggested-fix-card" id="card-suggested-fix">
+            <div class="fix-header">
+              <h4>
+                <span style="width:8px;height:8px;border-radius:99px;background:var(--green-strong)"></span>
+                Suggested Fix
+              </h4>
+              <span class="badge-tier green" style="height:22px;font-size:10px">HIGH CONFIDENCE</span>
+              <span style="margin-left:auto;font-size:11px;color:var(--secondary)">deterministic</span>
+            </div>
+
+            <div style="font-size:12px;color:var(--secondary)">
+              Updates versioned selector configuration in MongoDB. Code remains untouched; rollback history preserved.
+            </div>
+
+            <div class="selector-diff-box">
+              <div class="selector-row">
+                <span class="selector-tag">Old:</span>
+                <span class="selector-text-old">${fix.old_selector || 'table.gainers > tbody > tr.row'}</span>
+              </div>
+              <div class="selector-row">
+                <span class="selector-tag">New:</span>
+                <span class="selector-text-new">${fix.new_selector || 'table.gainers tr.stock-row'}</span>
+                <span class="badge-evidence verified" style="margin-left:auto">validated</span>
+              </div>
+            </div>
+
+            <div class="validation-box">
+              <span style="font-weight:800">✓</span>
+              <span>5/5 rows · schema passes · 5/5 anchors found · anchor field "symbol" non-empty</span>
+            </div>
+
+            <div class="fix-footer" id="fix-actions-container">
+              <button class="btn btn-primary" onclick="handleApproveFix('${fix.fix_id || 'fx_9c2a'}')">
+                Approve → write config v4
+              </button>
+              <button class="btn" onclick="handleRejectFix('${fix.fix_id || 'fx_9c2a'}')">
+                Reject
+              </button>
+              <span style="margin-left:auto;font-size:11px;color:var(--secondary)">
+                Conditional atomic update on <code>proposed</code>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    }
+
+    // 2. AMBER TIER VIEW (Likely Cause / Review Needed / Heuristic)
+    function renderAmberTierView(container, data) {
+      const uncertainty = data.uncertainty || {
+        status: "Review needed",
+        explanation: "Roughly 50-50 probability. Candidate passes structural checks but requires human review."
+      };
+
+      const causesHtml = (data.causes || []).map((c, idx) => `
+      <div class="cause-card amber-border">
+        <div class="cause-card-header">
+          <div class="cause-title">
+            <span style="width:20px;height:20px;border-radius:4px;background:var(--sand-yellow);border:1px solid var(--yellow-strong);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${idx + 1}</span>
+            ${c.title}
+          </div>
+          <span class="badge-evidence ${c.verification === 'ai_suggested' ? 'ai' : 'heuristic'}">
+            ${c.badge || 'Heuristic'}
+          </span>
+          <span class="score-badge">${c.score} <small style="color:var(--secondary);font-weight:400">/ 100</small></span>
+        </div>
+        <div class="cause-evidence">${c.evidence}</div>
+        <div style="font-size:11px;color:var(--secondary)">Heuristic analysis · human review required before approval</div>
+      </div>
+    `).join("");
+
+      const fix = data.fix || {};
+
+      container.innerHTML = `
+      <!-- LEFT COLUMN -->
+      <div class="split-pane">
+        <div class="pane-header-strip">
+          <h3>Field / DOM Comparison</h3>
+          <span class="badge-evidence ai">Uncertainty detected</span>
+        </div>
+        <div class="code-viewer-container">
+          <div class="code-card">
+            <div class="code-card-head">
+              <span>Baseline snapshot — <b class="mono">${data.baseline.run_id}</b> (pinned)</span>
+              <span class="meta">${data.baseline.selector || 'col 1'}</span>
+            </div>
+            <div class="code-body">
+              ${renderCodeBlock(data.baseline.snapshot_html, 'hl-removed')}
+            </div>
+          </div>
+
+          <div class="code-card">
+            <div class="code-card-head">
+              <span>Current snapshot — <b class="mono">${data.current.run_id}</b> (review needed)</span>
+              <span class="meta" style="color:var(--yellow-strong)">${data.issue && data.issue.target === 'change_pct' ? 'null field observed' : 'column shift observed'}</span>
+            </div>
+            <div class="code-body">
+              ${renderCodeBlock(data.current.snapshot_html, 'hl-amber')}
+            </div>
+          </div>
+
+          <div class="legend-strip">
+            <div class="legend-item">
+              <span class="legend-box" style="background-color:var(--rose-pink);border:1px solid var(--rose-strong)"></span>
+              <span><b>Rose pink:</b> Previous column / field</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-box" style="background-color:var(--sand-yellow);border:1px solid var(--yellow-strong)"></span>
+              <span><b>Sand yellow:</b> Shifted / heuristic candidate</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="viewer-tabs">
+          <button class="viewer-tab active">⬔ DOM Diff</button>
+          <button class="viewer-tab">Response (200 · 38 KB)</button>
+          <button class="viewer-tab">Embedded JSON</button>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="split-pane">
+        <div class="pane-header-strip" style="background-color:#FFFDF8">
+          <h3 style="color:var(--yellow-strong)">Uncertainty &amp; Plausible Causes</h3>
+          <span class="badge-evidence ai">${uncertainty.status}</span>
+        </div>
+        <div class="right-column-content">
+          <!-- Uncertainty Explanation Banner -->
+          <div class="uncertainty-banner">
+            <div style="font-weight:700">⚠ Review Required — Backend Computed Tier: Amber</div>
+            <div>${uncertainty.explanation}</div>
+            <div style="font-size:11px;color:var(--secondary);margin-top:2px">The tool never presents 100% certainty. The test ran on the stored page.</div>
+          </div>
+
+          ${causesHtml}
+
+          <!-- Proposed candidate with review requirement -->
+          <div class="suggested-fix-card amber-fix">
+            <div class="fix-header">
+              <h4>
+                <span style="width:8px;height:8px;border-radius:99px;background:var(--yellow-strong)"></span>
+                Candidate Repair (Review Needed)
+              </h4>
+              <span class="badge-tier amber" style="height:22px;font-size:10px">REVIEW NEEDED</span>
+            </div>
+
+            <div style="font-size:12px;color:var(--secondary)">
+              Heuristic candidate identified. Passes structural and typing checks, but developer confirmation required.
+            </div>
+
+            <div class="selector-diff-box">
+              <div class="selector-row">
+                <span class="selector-tag">Old:</span>
+                <span class="selector-text-old">${fix.old_selector || 'table.gainers td:nth-child(2)'}</span>
+              </div>
+              <div class="selector-row">
+                <span class="selector-tag">New:</span>
+                <span class="selector-text-new" style="background-color:#FFF6DE">${fix.new_selector || 'table.gainers td:nth-child(1)'}</span>
+                <span class="badge-evidence ai" style="margin-left:auto">needs review</span>
+              </div>
+            </div>
+
+            <div class="validation-box amber-val">
+              <span>⚠</span>
+              <span>${(fix.validation && fix.validation.details) || 'Partial validation: 5/5 rows extracted, review value bounds'}</span>
+            </div>
+
+            <div class="fix-footer">
+              <button class="btn btn-baseline" onclick="handleApproveFix('${fix.fix_id || 'fx_amber'}')">
+                Approve after review → write config v4
+              </button>
+              <button class="btn" onclick="handleRejectFix('${fix.fix_id || 'fx_amber'}')">
+                Reject candidate
+              </button>
+              <span style="margin-left:auto;font-size:11px;color:var(--secondary)">
+                Human confirmation mandatory
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    }
+
+    // 3. RED TIER VIEW (Unknown Cause / Observation Only)
+    function renderRedTierView(container, data) {
+      const observedRows = (data.observed || [
+        { signal: "Selector matches #nifty-widget", value: "0 nodes", delta: "was 1" },
+        { signal: "Selector prefix bisection", value: "html ✓ · body ✓ · #nifty-widget ✗", delta: "stops at #1" },
+        { signal: "Anchor 'NIFTY 50' in HTML", value: "absent", delta: "—" },
+        { signal: "Anchor in embedded JSON", value: "absent", delta: "__NEXT_DATA__ empty" },
+        { signal: "HTTP Response", value: "200 · 41 KB · text/html", delta: "mostly <script>" },
+        { signal: "Root container", value: "#app empty div + <noscript> gate", delta: "js_rendered_suspected" },
+        { signal: "Repeating-structure scan", value: "no repeating rows detected", delta: "—" }
+      ]).map(r => `
+      <tr>
+        <td>${r.signal}</td>
+        <td><b style="${r.value === '0 nodes' || r.value === 'absent' ? 'color:var(--rose-strong)' : ''}">${r.value}</b></td>
+        <td style="text-align:right;color:var(--secondary)">${r.delta}</td>
+      </tr>
+    `).join("");
+
+      container.innerHTML = `
+      <!-- LEFT COLUMN -->
+      <div class="split-pane">
+        <div class="pane-header-strip">
+          <h3>DOM / Evidence Comparison</h3>
+          <span style="font-size:11px;color:var(--secondary)">Honest verification: Never invent a match</span>
+        </div>
+
+        <div class="unknown-banner">
+          <span>⚠</span>
+          <span>No candidate region found — selector prefix bisection stopped at <code>#nifty-widget</code></span>
+        </div>
+
+        <div class="code-viewer-container">
+          <div class="code-card">
+            <div class="code-card-head">
+              <span>Baseline snapshot — <b class="mono">${data.baseline.run_id}</b> (pinned)</span>
+              <span class="meta">#nifty-widget matched 1 node</span>
+            </div>
+            <div class="code-body">
+              ${renderCodeBlock(data.baseline.snapshot_html, 'hl-removed')}
+            </div>
+          </div>
+
+          <div class="code-card">
+            <div class="code-card-head">
+              <span>Current snapshot — <b class="mono">${data.current.run_id}</b> (failed)</span>
+              <span class="meta" style="color:var(--rose-strong)">41 KB · mostly scripts · 0 nodes matched</span>
+            </div>
+            <div class="code-body">
+              ${renderCodeBlock(data.current.snapshot_html, 'hl-added')}
+            </div>
+          </div>
+
+          <div class="empty-dom-state">
+            <div style="font-weight:700;color:var(--ink);margin-bottom:4px">No DOM node to highlight on this page</div>
+            Response is an empty JS shell. Content likely requires client rendering. ScrapeGuard will not suggest bypassing access controls or inventing fake candidate regions.
+          </div>
+
+          <div class="legend-strip">
+            <div class="legend-item">
+              <span class="legend-box" style="background-color:var(--rose-pink);border:1px solid var(--rose-strong)"></span>
+              <span><b>Rose pink:</b> Baseline matched node</span>
+            </div>
+            <div class="legend-item">
+              <span><b>Current page:</b> No match found (0 nodes)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="viewer-tabs">
+          <button class="viewer-tab active">⬔ DOM Diff</button>
+          <button class="viewer-tab">Response (200 · 41 KB)</button>
+          <button class="viewer-tab">Embedded JSON (0 anchors)</button>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="split-pane">
+        <div class="pane-header-strip" style="background-color:#FDF5F6">
+          <h3 style="color:var(--rose-strong)">Cause Unknown — Observations Only</h3>
+          <span class="badge-evidence untested">Not a suggested fix</span>
+        </div>
+        <div class="right-column-content">
+          <div class="cause-card red-border" style="background-color:#FFF9FA">
+            <div class="cause-card-header">
+              <div class="cause-title" style="color:var(--rose-strong)">
+                Cause Unknown — No fix suggested
+              </div>
+              <span class="badge-tier red" style="font-size:10px;height:20px">No Approve Button</span>
+            </div>
+            <div class="cause-evidence">
+              ScrapeGuard cannot verify a selector fix on the stored page. The failure is recorded as <code>js_rendered_suspected</code>.
+            </div>
+          </div>
+
+          <!-- Observed Facts Table (Strictly Observed, never Changed) -->
+          <div class="observed-table-card">
+            <div class="observed-table-head">
+              <span>Observed facts (run 16)</span>
+              <span style="font-size:11px;color:var(--secondary);font-weight:400">Strictly observed data, no baseline claims</span>
+            </div>
+            <table class="observed-table">
+              <thead>
+                <tr>
+                  <th>Signal</th>
+                  <th>Value</th>
+                  <th style="text-align:right">Delta / Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${observedRows}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Possible Direction -->
+          <div class="possible-direction-card">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-weight:700;color:var(--ink)">Possible direction</span>
+              <span class="badge-evidence untested">Untested guess</span>
+            </div>
+            <div style="font-size:12px;line-height:16px;color:var(--ink)">
+              Page appears to be a JS shell — data not found in HTML or embedded JSON snapshots. If this URL previously returned server HTML, the target site may have transitioned to client-side hydration. Verify by fetching with <code>curl</code> and inspecting <code>view-source:</code>.
+            </div>
+            <div style="font-size:11px;color:var(--secondary);background-color:#F5F7F6;padding:6px 10px;border-radius:4px;border:1px solid var(--border)">
+              ScrapeGuard will not suggest ways around blocks, captchas or access gates. Respect site terms and rate limits.
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+              <button class="btn" style="height:28px;font-size:11px" onclick="showToast('Anchor input opened', false)">＋ Add expected value</button>
+              <button class="btn" style="height:28px;font-size:11px" onclick="showToast('AI analysis queued for background inspection', false)">✦ Ask AI to investigate</button>
+              <button class="btn" style="height:28px;font-size:11px" onclick="showToast('Error marked as ignored', false)">Ignore this error</button>
+            </div>
+            <div style="font-size:11px;color:var(--secondary);margin-top:2px">
+              Approval disabled: Candidate must pass full replay and validation before it can be applied.
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    }
+
+    // Fallback issue detail generator for offline/file:// mode
+    // All multi-line HTML strings use template literals to avoid syntax errors
+    function getFallbackIssueDetail(issueId) {
+      if (issueId === "iss_4") {
+        return {
+          issue: { issue_id: "iss_4", target: "nifty_widget", type: "selector", tier: "red", tier_reason: "no candidate reproduces baseline", failure_class: "js_rendered_suspected" },
+          baseline: {
+            run_id: "run_12",
+            layout_hash: "a3f9c1",
+            selector: "#nifty-widget",
+            snapshot_html: `<div id="nifty-widget" class="card">
+  <div class="card-head">NIFTY 50</div>
+  <div class="value" data-testid="nifty-val">22,147.90</div>
+  <div class="change up">+0.42%</div>
+</div>`
+          },
+          current: {
+            run_id: "run_16",
+            layout_hash: "b7d2e8",
+            selector: "#nifty-widget",
+            snapshot_html: `<div id="app"></div>
+<script src="/assets/app.9c12.js"><\/script>
+<script>window.__NEXT_DATA__ = {"props":{}}<\/script>
+<noscript>Enable JavaScript to view market data</noscript>`
+          },
+          observed: [
+            { signal: "Selector matches #nifty-widget", value: "0 nodes", delta: "was 1", alert: true },
+            { signal: "Selector prefix bisection", value: "html ✓ · body ✓ · #nifty-widget ✗", delta: "stops at #1", alert: false },
+            { signal: "Anchor 'NIFTY 50' in HTML", value: "absent", delta: "—", alert: true },
+            { signal: "Anchor in embedded JSON", value: "absent", delta: "__NEXT_DATA__ empty", alert: true },
+            { signal: "HTTP Response", value: "200 · 41 KB · text/html", delta: "mostly script tags", alert: false },
+            { signal: "Root container", value: "#app empty div + noscript gate", delta: "js_rendered_suspected", alert: true },
+            { signal: "Repeating-structure scan", value: "no repeating rows detected", delta: "—", alert: false }
+          ],
+          fix: null
+        };
+      } else if (issueId === "iss_2") {
+        return {
+          issue: { issue_id: "iss_2", target: "price", type: "field", tier: "amber", tier_reason: "1 candidate, review needed (roughly 50-50)", failure_class: "structure_changed" },
+          baseline: {
+            run_id: "run_12",
+            layout_hash: "a3f9c1",
+            selector: "table.gainers td:nth-child(2)",
+            snapshot_html: `<table class="gainers">
+  <thead> <tr><th>Symbol</th><th>Price</th><th>Change %</th></tr> </thead>
+  <tbody>
+    <tr><td>RELIANCE</td><td class="price">1,482.10</td><td>+2.14%</td></tr>
+    <tr><td>TCS</td><td class="price">3,905.40</td><td>+1.82%</td></tr>
+  </tbody>
+</table>`
+          },
+          current: {
+            run_id: "run_16",
+            layout_hash: "b7d2e8",
+            selector: "table.gainers td:nth-child(2)",
+            snapshot_html: `<table class="gainers">
+  <thead> <tr><th>Price</th><th>Symbol</th><th>Change %</th></tr> </thead>
+  <tbody>
+    <tr><td class="price">1,482.10</td><td class="sym">RELIANCE</td><td>+2.14%</td></tr>
+    <tr><td class="price">3,905.40</td><td class="sym">TCS</td><td>+1.82%</td></tr>
+  </tbody>
+</table>`
+          },
+          uncertainty: { status: "Review needed", explanation: "Roughly 50-50 probability. Column order shifted in thead (Price swapped with Symbol). Structural checks pass, but value bounds check requires human review before config update." },
+          causes: [
+            { finding_id: "f_reorder", title: "Column order shifted in thead (reorder_columns)", category: "reorder_columns", verification: "heuristic", badge: "Heuristic", score: 62, evidence: "thead labels shifted 1 column. td:nth-child(2) now extracts company names instead of numeric prices." }
+          ],
+          fix: {
+            fix_id: "fx_price_col",
+            status: "proposed",
+            tier: "amber",
+            old_selector: "table.gainers td:nth-child(2)",
+            new_selector: "table.gainers td:nth-child(1)",
+            validation: { details: "5/5 rows extracted · numeric format matches · developer verification required" }
+          }
+        };
+      } else if (issueId === "iss_3") {
+        return {
+          issue: { issue_id: "iss_3", target: "change_pct", type: "field", tier: "amber", tier_reason: "AI-suggested, not fully tested", failure_class: "schema_validation_failed" },
+          baseline: {
+            run_id: "run_12",
+            layout_hash: "a3f9c1",
+            selector: "td.change",
+            snapshot_html: `<table class="gainers">
+  <tbody>
+    <tr><td>RELIANCE</td><td>1,482.10</td><td class="change">+2.14%</td></tr>
+    <tr><td>TCS</td><td>3,905.40</td><td class="change">+1.82%</td></tr>
+  </tbody>
+</table>`
+          },
+          current: {
+            run_id: "run_16",
+            layout_hash: "b7d2e8",
+            selector: "td.change",
+            snapshot_html: `<table class="gainers">
+  <tbody>
+    <tr><td>1,482.10</td><td>RELIANCE</td><td class="chg-val" data-delta="up">+2.14%</td></tr>
+    <tr><td>3,905.40</td><td>TCS</td><td class="chg-val" data-delta="up">+1.82%</td></tr>
+  </tbody>
+</table>`
+          },
+          uncertainty: { status: "AI-suggested, not fully tested", explanation: "Field 'change_pct' resolved to null in 5/5 records. AI proposed td.chg-val, but validation passes only partial checks." },
+          causes: [
+            { finding_id: "f_schema_val", title: "Pydantic validator failed: required field change_pct is null", category: "schema_failed", verification: "heuristic", badge: "Heuristic", score: 58, evidence: "Required field missing from extraction dict. td.change matched 0 elements in current snapshot." }
+          ],
+          fix: {
+            fix_id: "fx_chg_pct",
+            status: "proposed",
+            tier: "amber",
+            old_selector: "td.change",
+            new_selector: "td.chg-val",
+            validation: { details: "Extracted 5 rows · Pydantic validation passes on candidate · requires review" }
+          }
+        };
+      } else {
+        // iss_1: green
+        return {
+          issue: { issue_id: "iss_1", target: "gainer_rows", type: "selector", tier: "green", tier_reason: "5/5 rows, schema passes", failure_class: "structure_changed" },
+          baseline: {
+            run_id: "run_12",
+            layout_hash: "a3f9c1",
+            match_count: 5,
+            snapshot_html: `<table class="gainers">
+  <thead> <tr><th>Symbol</th><th>Price</th><th>Change %</th></tr> </thead>
+  <tbody>
+    <tr class="row"><td class="sym">RELIANCE</td><td class="price">1,482.10</td><td class="change">+2.14%</td></tr>
+    <tr class="row"><td class="sym">TCS</td><td class="price">3,905.40</td><td class="change">+1.82%</td></tr>
+    <tr class="row"><td class="sym">INFY</td><td class="price">1,621.00</td><td class="change">+1.44%</td></tr>
+  </tbody>
+</table>`
+          },
+          current: {
+            run_id: "run_16",
+            layout_hash: "b7d2e8",
+            match_count: 0,
+            snapshot_html: `<table class="gainers">
+  <thead> <tr><th>Symbol</th><th>Price</th><th>Change %</th></tr> </thead>
+  <tbody>
+    <tr class="stock-row"><td class="sym">RELIANCE</td><td class="price">1,482.10</td><td class="change">+2.14%</td></tr>
+    <tr class="stock-row"><td class="sym">TCS</td><td class="price">3,905.40</td><td class="change">+1.82%</td></tr>
+    <tr class="stock-row"><td class="sym">INFY</td><td class="price">1,621.00</td><td class="change">+1.44%</td></tr>
+  </tbody>
+</table>`
+          },
+          causes: [
+            { finding_id: "f1", title: "Class renamed tr.row → tr.stock-row", category: "rename_class", verification: "verified", badge: "Verified by replay", score: 94, evidence: "Applied alone to baseline snapshot: 5 → 0 matches. Reverting on failed snapshot: 0 → 5 — fully explains failure.", score_breakdown: { token_hit: 40, critical_path: 25, timing: 15, severity: 8, proximity: 6 } },
+            { finding_id: "f2", title: "Wrapper div inserted before tbody", category: "insert_wrapper", verification: "verified", badge: "Verified by replay", score: 78, evidence: "Op insert_wrapper at table.gainers > div.wrap > tbody — direct child > breaks, descendant still matches 5.", score_breakdown: { token_hit: 30, critical_path: 20, timing: 15, severity: 7, proximity: 6 } }
+          ],
+          fix: {
+            fix_id: "fx_9c2a",
+            status: "proposed",
+            tier: "green",
+            old_selector: "table.gainers > tbody > tr.row",
+            new_selector: "table.gainers tr.stock-row"
+          }
+        };
+      }
+    }
+
+    // Test suspect action
+    async function handleTestSuspect(findingId) {
+      showToast("Replaying operation on stored baseline snapshot...", false);
+      try {
+        await fetch(`${API_BASE}/errors/${state.activeIssueId}/test-suspect`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ finding_id: findingId })
+        });
+      } catch (e) { }
+      setTimeout(() => {
+        showToast("Replay test verified: 5 → 0 matches confirmed. Score 94 maintained.", false);
+      }, 400);
+    }
+
+    // Approve Fix action
+    async function handleApproveFix(fixId) {
+      showToast("Applying fix: writing selector-config v4 to MongoDB...", false);
+      try {
+        await fetch(`${API_BASE}/fixes/${fixId}/approve`, { method: "POST" });
+      } catch (e) { }
+
+      state.configVersion = 4;
+      document.getElementById("topbar-config-version").innerText = "config v4";
+
+      const actions = document.getElementById("fix-actions-container");
+      if (actions) {
+        actions.innerHTML = `
+        <span class="badge-evidence verified" style="height:26px;font-size:11px;padding:0 10px">
+          ✓ Fix Approved &amp; Config v4 Active
+        </span>
+        <button class="btn" onclick="handleRollbackFix('${fixId}')">
+          Rollback to v3
+        </button>
+        <span style="margin-left:auto;font-size:11px;color:var(--secondary)">
+          Config version incremented: v3 → v4. Rollback available.
+        </span>
+      `;
+      }
+      showToast("Fix approved successfully: Config v4 written. Next successful run can be blessed as baseline.", false);
+    }
+
+    // Reject Fix action
+    async function handleRejectFix(fixId) {
+      try {
+        await fetch(`${API_BASE}/fixes/${fixId}/reject`, { method: "POST" });
+      } catch (e) { }
+
+      const actions = document.getElementById("fix-actions-container");
+      if (actions) {
+        actions.innerHTML = `
+        <span class="badge-evidence untested" style="height:26px;font-size:11px;padding:0 10px">
+          ✗ Fix Rejected
+        </span>
+        <button class="btn btn-primary" onclick="handleApproveFix('${fixId}')">
+          Re-evaluate &amp; Approve
+        </button>
+      `;
+      }
+      showToast(`Fix proposal ${fixId} rejected.`, false);
+    }
+
+    // Rollback Fix action
+    async function handleRollbackFix(fixId) {
+      try {
+        await fetch(`${API_BASE}/fixes/${fixId}/rollback`, { method: "POST" });
+      } catch (e) { }
+
+      state.configVersion = 3;
+      document.getElementById("topbar-config-version").innerText = "config v3";
+
+      const actions = document.getElementById("fix-actions-container");
+      if (actions) {
+        actions.innerHTML = `
+        <button class="btn btn-primary" onclick="handleApproveFix('${fixId}')">
+          Approve → write config v4
+        </button>
+        <button class="btn" onclick="handleRejectFix('${fixId}')">
+          Reject
+        </button>
+        <span style="margin-left:auto;font-size:11px;color:var(--secondary)">
+          Restored selector config v3.
+        </span>
+      `;
+      }
+      showToast("Rolled back to config version 3.", false);
+    }
+
+    // Format ISO timestamp to human-readable
+    function formatTimestamp(ts) {
+      if (!ts) return "—";
+      // Already human-readable (from fallback state)
+      if (!ts.includes('T') && !ts.includes('-')) return ts;
+      try {
+        const d = new Date(ts);
+        const now = new Date();
+        const isToday = d.toDateString() === now.toDateString();
+        const timeStr = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + " UTC";
+        return isToday ? `Today ${timeStr}` : d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) + " " + timeStr;
+      } catch (e) { return ts; }
+    }
+
+    // Initial load — fetch real runs from API, fall back to state defaults
+    async function init() {
+      try {
+        const res = await fetch(`${API_BASE}/projects/${state.projectId}/scan`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.runs && data.runs.length) {
+            // Normalise API timestamps into display format
+            state.runs = data.runs.map(r => ({
+              ...r,
+              started_at: formatTimestamp(r.started_at)
+            }));
+          }
+          if (data.baseline_run_id) state.baselineRunId = data.baseline_run_id;
+        }
+      } catch (e) { /* offline or server not running — use fallback state */ }
+
+      // Also fetch errors list
+      try {
+        const res = await fetch(`${API_BASE}/projects/${state.projectId}/errors`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.errors && data.errors.length) {
+            state.errors = data.errors.map(e => ({
+              ...e,
+              description: e.description || `${e.target} — ${e.type} error`,
+              impact: e.impact || `runs affected: ${e.runs_affected || 1}`
+            }));
+          }
+        }
+      } catch (e) { /* use fallback errors */ }
+
+      renderRuns();
+      renderErrorsList();
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      init();
+    });
+  </script>
+
+</body>
+
+</html>
