@@ -24,6 +24,6 @@ def apply_op(html, op):
         for el in soup.select(f".{before}"):
             classes=el.get("class", [])
             if before in classes:
-                classes=[after if c==before else c for c in classes]
+                classes = [after if c == before else c for c in classes]
                 el["class"]=classes
     return str(soup)

@@ -3,6 +3,9 @@ from datetime import datetime, timezone
 from functools import wraps
 import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+
+load_dotenv()
 
 API_BASE = os.environ.get("SCRAPEGUARD_API", "http://localhost:5000/api")
 SPOOL_PATH = pathlib.Path.home() / ".scrapeguard" / "spool.jsonl"
@@ -129,7 +132,7 @@ def monitor(project=None):
                         if s["name"] in ("gainer_rows","loser_rows","rows"):
                             record_count = max(record_count, s["match_count"])
                 # http_response event
-                ev("http_response", {"status": 200, "bytes": len(str(soup)), "elapsed_ms": int((time.time()-start_ts)*1000)})
+                ev("http_response", {"status": 200, "bytes": len(str(sgctx.soup)), "elapsed_ms": int((time.time()-start_ts)*1000)})
                 for st in sgctx.selector_stats:
                     ev("selector_result", st)
                 ev("extraction_result", {"record_count": record_count})
@@ -146,6 +149,7 @@ def monitor(project=None):
                 # for demo we swallow
                 result = []
 
+            soup = sgctx.soup
             ended = datetime.now(timezone.utc)
             duration_ms = int((time.time()-start_ts)*1000)
 
@@ -166,8 +170,9 @@ def monitor(project=None):
                 "config_version": 3, "status": status, "started_at": started.isoformat(), "ended_at": ended.isoformat(),
                 "duration_ms": duration_ms, "record_count": record_count, "selector_stats": sgctx.selector_stats,
                 "anchors": sgctx.anchors_found or [s["name"] for s in sgctx.selector_stats],
-                "layout_hash": layout_hash, "snapshot_ref": layout_hash, "failure_class": None, "error_summary": error_summary, "pinned": False
-            }
+                "layout_hash": layout_hash,
+                "snapshot_ref": skeleton_hash,"failure_class": None, "error_summary": error_summary, "pinned": False
+        }
 
             payload = {"run": run_doc, "events": events, "snapshot": snapshot, "anchors_extracted": []}
             _post_ingest(payload)

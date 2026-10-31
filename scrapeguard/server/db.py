@@ -4,9 +4,14 @@ Only server touches MongoDB; SDK never has credentials.
 """
 from pymongo import MongoClient, ASCENDING, DESCENDING
 from pymongo.errors import DuplicateKeyError
+from pathlib import Path
 import os
+from dotenv import load_dotenv
 
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+load_dotenv(PROJECT_ROOT / ".env", override=True)
+
+MONGO_URI = os.environ.get("MONGO_URI")
 DB_NAME = os.environ.get("DB_NAME", "scrapeguard")
 
 # JSON schema validators (strict required fields + flexible payload)
@@ -51,6 +56,8 @@ EVENT_VALIDATOR = {
 }
 
 def get_db(uri=MONGO_URI, db_name=DB_NAME):
+    if not uri:
+        raise RuntimeError("MONGO_URI environment variable is not set")
     client = MongoClient(uri)
     return client[db_name]
 

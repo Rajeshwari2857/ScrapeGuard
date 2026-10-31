@@ -1,5 +1,5 @@
-from flask import Blueprint, request, jsonify
-from pymongo.errors import BulkWriteError
+from flask import Blueprint, request, jsonify, current_app
+from pymongo.errors import BulkWriteError, DuplicateKeyError
 from datetime import datetime, timedelta, timezone
 import zlib, base64
 
@@ -18,13 +18,19 @@ def _expires_for_events(run_status, pinned):
         return None
     return datetime.now(timezone.utc) + timedelta(days=14)
 
+
 @bp.post("/ingest")
 def ingest():
-    db = request.app_db if hasattr(request, 'app_db') else None
-    # fallback to current_app
-    from flask import current_app
     db = current_app.db
+
+    if db is None:
+        return jsonify({
+            "ok": False,
+            "error": "Database unavailable. Run was not stored."
+        }), 503
+
     payload = request.get_json(force=True)
+
     if not payload or "run" not in payload:
         return jsonify({"ok": False, "error": "missing run"}), 400
 
@@ -32,27 +38,34 @@ def ingest():
     events = payload.get("events", [])
     snapshot = payload.get("snapshot")
 
-    # validation — required fields
     if "_id" not in run or "project_id" not in run:
-        return jsonify({"ok": False, "error": "run missing _id/project_id"}), 400
+        return jsonify({
+            "ok": False,
+            "error": "run missing _id/project_id"
+        }), 400
 
-    # idempotent run upsert (client-generated UUID)
     run_doc = {**run}
-    # set TTL
-    exp = _expires_for_run(run_doc.get("status"), run_doc.get("pinned", False))
-    if exp: run_doc["expires_at"] = exp
 
-    if db is not None:
-        try:
-            db.runs.insert_one(run_doc)
-            inserted_run = 1
-        except Exception as e:
-            if "duplicate" in str(e).lower():
-                inserted_run = 0
-            else:
-                return jsonify({"ok": False, "error": str(e)}), 500
-    else:
+    exp = _expires_for_run(
+        run_doc.get("status"),
+        run_doc.get("pinned", False)
+    )
+
+    if exp:
+        run_doc["expires_at"] = exp
+
+    try:
+        db.runs.insert_one(run_doc)
         inserted_run = 1
+
+    except DuplicateKeyError:
+        inserted_run = 0
+
+    except Exception as e:
+        return jsonify({
+            "ok": False,
+            "error": str(e)
+        }), 500
 
     # snapshot dedup: layout_versions upsert by project+hash
     snapshot_stored = False

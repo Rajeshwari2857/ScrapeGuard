@@ -1982,6 +1982,16 @@
       }
     }
 
+    function displayRunName(run) {
+      if (run.run_id === state.baselineRunId) return "Baseline Run";
+
+      const manual = run.run_id.match(/^manual_test_(\d+)$/);
+      if (manual) return `Manual Test ${manual[1]}`;
+
+      const index = state.runs.findIndex(r => r.run_id === run.run_id);
+      return `Scraper Run ${String(index + 1).padStart(2, "0")}`;
+    }
+
     // Render Recent Runs Table (Dashboard)
     function renderRuns() {
       const table = document.getElementById("runs-list-table");
@@ -2014,7 +2024,7 @@
           <input type="radio" name="run_selection" ${state.selectedRunId === run.run_id ? "checked" : ""} style="cursor:pointer" onclick="event.stopPropagation(); selectRun('${run.run_id}')" />
         </div>
         <div class="run-id-col">
-          <span>${run.run_id}</span>
+          <span>${displayRunName(run)}</span>
           ${isBaseline ? '<span class="badge-baseline-tag">BASELINE</span>' : ''}
         </div>
         <div class="run-time-col">${run.started_at}</div>
